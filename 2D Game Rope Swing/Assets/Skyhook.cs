@@ -10,6 +10,7 @@ public class Skyhook : MonoBehaviour {
     private DistanceJoint2D distanceJoint2D;
     private bool tethered;
     private bool midSwing;
+	private bool initialSwing;
     private PlayerPlatformerController ppc;
     private Rigidbody2D rb2d;
 
@@ -19,10 +20,11 @@ public class Skyhook : MonoBehaviour {
     public LayerMask ropeLayerMask;
     private List<Vector2> ropePositions = new List<Vector2>();
     // Use this for initialization
-    void Awake () {
+	void Awake () {
         anchor = GameObject.Find("Anchor");
         ppc = GetComponent<PlayerPlatformerController>();
         rb2d = GetComponent<Rigidbody2D>();
+		initialSwing = true;
 	}
 	
 	// Update is called once per frame
@@ -47,7 +49,10 @@ public class Skyhook : MonoBehaviour {
 
             ppc.enabled = false;
             rb2d.bodyType = RigidbodyType2D.Dynamic;
-            rb2d.velocity = ppc.targetVelocity;
+			if (initialSwing) {
+				rb2d.velocity = ppc.targetVelocity;
+				initialSwing = false;
+			}
             lengthOfRope = Vector3.Distance(anchorPosition, targetPosition);
             distanceJoint2D.anchor = anchor.transform.localPosition;
             distanceJoint2D.connectedAnchor = targetPosition;
@@ -72,6 +77,7 @@ public class Skyhook : MonoBehaviour {
 
         if(midSwing && IsGrounded())
         {
+			initialSwing = true;
             ppc.enabled = true;
             midSwing = false;
             rb2d.velocity = new Vector2(0f, 0f);
@@ -90,10 +96,10 @@ public class Skyhook : MonoBehaviour {
 
     IEnumerator ShortenRope()
     {
-        while (distanceJoint2D.distance >= lengthOfRope * 0.75f)
+        while (distanceJoint2D.distance >= lengthOfRope * 0.1f)
         {
             distanceJoint2D.distance = distanceJoint2D.distance * 0.999f;
-            yield return null;
+			yield return null;
         }
     }
 
